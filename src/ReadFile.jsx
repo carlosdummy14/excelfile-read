@@ -1,6 +1,7 @@
 import { useState } from "react"
 import readXlsxFile, { readSheetNames } from "read-excel-file"
 import * as yup from "yup"
+import ItemMO from "./ItemMO"
 
 const packageSchema = yup.object().shape({
   vehiculo: yup.string().min(3).max(30).required("VEHICULO es requerido"),
@@ -99,36 +100,9 @@ const ReadFile = (props) => {
       <button onClick={handleOnlyErrors}>
         {onlyErrors ? "Mostrar todo" : "Mostrar solo errores"}
       </button>
-      <div>
-        {data.map(({ errors, row, value }) => {
-          if (!errors) {
-            return onlyErrors ? null : (
-              <p
-                key={row}
-                style={{
-                  border: "1px solid #999",
-                  margin: "1rem",
-                  backgroundColor: "#0a0",
-                }}
-              >
-                <span>Linea {row} correta: </span>
-                {value.paquete}
-              </p>
-            )
-          } else {
-            return (
-              <p key={row} style={{ border: "1px solid #999", margin: "1rem" }}>
-                <span>Linea {row} --Error--</span>
-                {errors.map((e) => (
-                  <div key={e} style={{ backgroundColor: "#800" }}>
-                    {e}
-                  </div>
-                ))}
-              </p>
-            )
-          }
-        })}
-      </div>
+      <section>
+		{data.map(itemMO => <ItemMO key={itemMO.row} data={itemMO} onlyErrors={onlyErrors} />)}
+      </section>
     </div>
   )
 }
