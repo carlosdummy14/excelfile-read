@@ -2,60 +2,56 @@ import { useState } from "react"
 import readXlsxFile, { readSheetNames } from "read-excel-file"
 import * as yup from "yup"
 import ItemMO from "./ItemMO"
+import {
+  packageSchema,
+  mapMO,
+  varSchema,
+  mapVA,
+  refSchema,
+  mapREF,
+} from "./utils/validationObjects"
 
-const packageSchema = yup.object().shape({
-  vehiculo: yup.string().min(3).max(30).required("VEHICULO es requerido"),
-  servicio: yup.string().min(3).max(4).required("SERVICIO es requerido"),
-  paquete: yup
-    .string()
-    .min(3)
-    .max(18, "PAQUETE maximo 18 caracteres")
-    .required("PAQUETE es requerido"),
-  operacion: yup.string().min(2).max(4).required(),
-  qty: yup.number().positive().min(0.1).max(99.9).required(),
-  monto: yup.number().positive().min(0.01).max(99999.99).required(),
-  descripcionServicio: yup
-    .string()
-    .min(3)
-    .max(150)
-    .required("DESCRIPCION es requerido"),
-  modelo1: yup.number().positive().min(2000).integer().required(),
-  modelo2: yup.number().positive().min(2000).integer().required(),
-  codigoEreact: yup
-    .string()
-    .min(3)
-    .max(10)
-    .required("CODIGO EREACT es requerido"),
-})
-
-const map = {
-  VEHICULO: "vehiculo",
-  SERVICIO: "servicio",
-  PAQUETE: "paquete",
-  OPERACIÓN: "operacion",
-  QTY: "qty",
-  MONTO: "monto",
-  "DESCRIPCION SERVICIO": "descripcionServicio",
-  "MODELO 1": "modelo1",
-  "MODELO 2": "modelo2",
-  "CODIGO EREACT": "codigoEreact",
-}
-
-const ReadFile = (props) => {
+const ReadFile = () => {
   const [data, setData] = useState([])
+  const [dataVA, setDataVA] = useState([])
+  const [dataREF, setDataREF] = useState([])
   const [onlyErrors, setOnlyErrors] = useState(false)
+  const [fileName, setFileName] = useState("Selecciona un archivo...")
+  const [globalError, setGlobalError] = useState(null)
 
-  const handleUpload = async (e) => {
+  const handleUpload = async e => {
     e.preventDefault()
-    const sheetsName = await readSheetNames(input.files[0])
-    const fileReaded = await readXlsxFile(input.files[0], {
-      sheet: "DMS-MO 14",
-      map,
-    })
 
-    const { rows } = fileReaded
+    let rows = []
+    let rowsVA = []
+    let rowsREF = []
+
+    try {
+      setGlobalError(null)
+      const sheetsName = await readSheetNames(input.files[0])
+      const fileReaded = await readXlsxFile(input.files[0], {
+        sheet: "DMS-MO 14",
+        map: mapMO,
+      })
+      const sheetVA = await readXlsxFile(input.files[0], {
+        sheet: "DMS-VARIOS 14",
+        map: mapVA,
+      })
+      const sheetREF = await readXlsxFile(input.files[0], {
+        sheet: "DMS-REF 14",
+        map: mapREF,
+      })
+
+      rows = fileReaded.rows
+      rowsVA = sheetVA.rows
+      rowsREF = sheetREF.rows
+    } catch (error) {
+      setGlobalError({ msg: "Archivo invalido!!!", error: error.message })
+    }
+
     // console.log(rows)
 
+    // -- validation of sheet MO
     const validationPackage = await Promise.all(
       rows.map(async (row, index) => {
         let value, errAcum
@@ -69,9 +65,40 @@ const ReadFile = (props) => {
         return { value, errors: errAcum, row: index + 2 }
       })
     )
+    // -- validation of sheet VA
+    const validationVA = await Promise.all(
+      rowsVA.map(async (row, index) => {
+        let value, errAcum
+        try {
+          value = await varSchema.validate(row, { abortEarly: false })
+        } catch (error) {
+          // console.log(error)
+          // return error
+          errAcum = error.errors
+        }
+        return { value, errors: errAcum, row: index + 2 }
+      })
+    )
+    // -- validation of sheet REF
+    const validationREF = await Promise.all(
+      rowsREF.map(async (row, index) => {
+        let value, errAcum
+        try {
+          value = await refSchema.validate(row, { abortEarly: false })
+        } catch (error) {
+          // console.log(error)
+          // return error
+          errAcum = error.errors
+        }
+        return { value, errors: errAcum, row: index + 2 }
+      })
+    )
 
     // console.log(validationPackage)
     setData(validationPackage)
+    setDataVA(validationVA)
+    setDataREF(validationREF)
+    setFileName(input.files[0].name)
   }
 
   const clearFile = () => {
@@ -79,10 +106,10 @@ const ReadFile = (props) => {
   }
 
   const handleOnlyErrors = () => {
-    setOnlyErrors((prevStatus) => !prevStatus)
+    setOnlyErrors(prevStatus => !prevStatus)
   }
 
-  console.log(data)
+  // console.log(data)
 
   return (
     <div>
@@ -92,17 +119,42 @@ const ReadFile = (props) => {
         <br />
         <button>Check File</button>
       </form>
-      <h3>
-        Total de paquetes: {data.length} Correctos:{" "}
-        {data.filter((row) => row.value).length} Errores:{" "}
-        {data.filter((row) => row.errors).length}
-      </h3>
-      <button onClick={handleOnlyErrors}>
-        {onlyErrors ? "Mostrar todo" : "Mostrar solo errores"}
-      </button>
-      <section>
-		{data.map(itemMO => <ItemMO key={itemMO.row} data={itemMO} onlyErrors={onlyErrors} />)}
-      </section>
+      <h3>Archivo: {fileName}</h3>
+      {globalError ? (
+        <p>
+          {globalError.msg}
+          <br />
+          {globalError.error}
+        </p>
+      ) : (
+        <>
+          <h3>
+            Total de paquetes: {data.length} Correctos: {data.filter(row => row.value).length}{" "}
+            Errores: {data.filter(row => row.errors).length}
+          </h3>
+          <button onClick={handleOnlyErrors}>
+            {onlyErrors ? "Mostrar todo" : "Mostrar solo errores"}
+          </button>
+          <section>
+            <h3>Resumen de -- DMS-MO 14 --</h3>
+            {data.map(itemMO => (
+              <ItemMO key={itemMO.row} data={itemMO} onlyErrors={onlyErrors} />
+            ))}
+          </section>
+          <section>
+            <h3>Resumen de -- DMS-VARIOS 14 --</h3>
+            {dataVA.map(itemVA => (
+              <ItemMO key={itemVA.row} data={itemVA} onlyErrors={onlyErrors} />
+            ))}
+          </section>
+          <section>
+            <h3>Resumen de -- DMS-REF 14 --</h3>
+            {dataREF.map(itemREF => (
+              <ItemMO key={itemREF.row} data={itemREF} onlyErrors={onlyErrors} />
+            ))}
+          </section>
+        </>
+      )}
     </div>
   )
 }
