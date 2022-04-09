@@ -10,6 +10,7 @@ import {
   refSchema,
   mapREF,
 } from "./utils/validationObjects"
+import { validateMOvsVA } from "./utils/validations"
 
 const ReadFile = () => {
   const [data, setData] = useState([])
@@ -18,6 +19,7 @@ const ReadFile = () => {
   const [onlyErrors, setOnlyErrors] = useState(false)
   const [fileName, setFileName] = useState("Selecciona un archivo...")
   const [globalError, setGlobalError] = useState(null)
+  const [errorsMOvsVA, setErrorsMOvsVA] = useState(null)
 
   const handleUpload = async e => {
     e.preventDefault()
@@ -99,6 +101,8 @@ const ReadFile = () => {
     setDataVA(validationVA)
     setDataREF(validationREF)
     setFileName(input.files[0].name)
+
+    setErrorsMOvsVA(validateMOvsVA(validationPackage, validationVA))
   }
 
   const clearFile = () => {
@@ -110,6 +114,7 @@ const ReadFile = () => {
   }
 
   // console.log(data)
+  console.log(errorsMOvsVA)
 
   return (
     <div>
@@ -135,6 +140,12 @@ const ReadFile = () => {
           <button onClick={handleOnlyErrors}>
             {onlyErrors ? "Mostrar todo" : "Mostrar solo errores"}
           </button>
+          <section>
+            <h3>Resumen de -- MO vs VA --</h3>
+            {errorsMOvsVA?.map(item => (
+              <p>{item}</p>
+            ))}
+          </section>
           <section>
             <h3>Resumen de -- DMS-MO 14 --</h3>
             {data.map(itemMO => (
