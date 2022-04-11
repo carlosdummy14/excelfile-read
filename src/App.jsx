@@ -1,12 +1,10 @@
-import { useState } from "react"
 import ReadFile from "./ReadFile"
 import "./App.css"
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <div className="App">
+      <h1>Package Validator</h1>
       <ReadFile />
     </div>
   )
