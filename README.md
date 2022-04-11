@@ -1,6 +1,7 @@
 # Package Validator
 
 This app read a ".xlsx" file and validate structure and consistency around tree sheets.
+I know that is something specific for me, but is good for learn.
 
 ### Task List
 
@@ -17,6 +18,8 @@ This app read a ".xlsx" file and validate structure and consistency around tree 
 - [x] Create line component for first sheet
 - [x] Extract maps and validator object to utils
 - [x] Validate VAR and REF
-- [] Validate MO vs VAR
-- [] Validate MO vs REF
-- [] Validate package price MO plus REF
+- [x] Validate MO vs VAR
+- [x] Validate MO vs REF
+- [x] Validate package price MO plus REF
+- [] Refactor of variables names
+- [] Refactor from responsabilities

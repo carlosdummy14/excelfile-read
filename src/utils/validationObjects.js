@@ -1,4 +1,5 @@
 import * as yup from "yup"
+import { roundTwoDecimal } from "./validations"
 
 export const packageSchema = yup.object().shape({
   vehiculo: yup.string().min(3).max(30).required("VEHICULO es requerido"),
@@ -9,8 +10,13 @@ export const packageSchema = yup.object().shape({
     .max(18, "PAQUETE maximo 18 caracteres")
     .required("PAQUETE es requerido"),
   operacion: yup.string().min(2).max(4).required("OPERACIÓN es requerido"),
-  qty: yup.number().positive().min(0.1).max(99.9).required("QTY es requerido"),
-  monto: yup.number().positive().min(0.01).max(99999.99).required("MONTO es requerido"),
+  qty: yup.number().positive().max(99.9).required("QTY es requerido"),
+  monto: yup
+    .number()
+    .positive()
+    .max(99999.99)
+    .required("MONTO es requerido")
+    .transform(value => roundTwoDecimal(value)),
   descripcionServicio: yup
     .string()
     .min(3)
@@ -19,6 +25,12 @@ export const packageSchema = yup.object().shape({
   modelo1: yup.number().positive().min(2000).integer().required("MODELO 1 es requerido"),
   modelo2: yup.number().positive().min(2000).integer().required("MODELO 2 es requerido"),
   codigoEreact: yup.string().min(3).max(10).required("CODIGO EREACT es requerido"),
+  precioPaquete: yup
+    .number()
+    .positive()
+    .min(1)
+    .required("PRECIO DE PAQUETE (PP) es requerido")
+    .transform(value => roundTwoDecimal(value)),
 })
 
 export const varSchema = yup.object().shape({
@@ -58,7 +70,12 @@ export const refSchema = yup.object().shape({
     .integer()
     .max(9, "QTY debe ser maximo 9")
     .required("QTY es requerido"),
-  precioUnitario: yup.number().positive().max(99999.99).required("PRECIO UNITARIO es requerido"),
+  precioUnitario: yup
+    .number()
+    .positive()
+    .max(99999.99)
+    .required("PRECIO UNITARIO es requerido")
+    .transform(value => roundTwoDecimal(value)),
   descripcion: yup
     .string()
     .min(3)
@@ -77,6 +94,7 @@ export const mapMO = {
   "MODELO 1": "modelo1",
   "MODELO 2": "modelo2",
   "CODIGO EREACT": "codigoEreact",
+  PP: "precioPaquete",
 }
 
 export const mapVA = {

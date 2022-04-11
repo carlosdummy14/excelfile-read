@@ -62,3 +62,48 @@ export const validateMOvsREF = (arrayMO, arrayREF) => {
 
   return errors
 }
+
+export const validatePackagePrice = (arrayMO, arrayREF) => {
+  const errors = []
+
+  const keysMO = []
+  for (const itemMO of arrayMO) {
+    const key = {
+      paquete: `${itemMO.value?.vehiculo}|${itemMO.value?.servicio}|${itemMO.value?.paquete}`,
+      precioMO: itemMO.value?.monto || 0,
+      precioPaquete: itemMO.value?.precioPaquete || 0,
+    }
+    if (!keysMO.includes(key)) keysMO.push(key)
+  }
+  let keysREF = {}
+  for (const itemREF of arrayREF) {
+    const key = `${itemREF.value?.vehiculo}|${itemREF.value?.servicio}|${itemREF.value?.paquete}`
+    const value = itemREF.value?.qty * itemREF.value?.precioUnitario || 0
+
+    keysREF = {
+      ...keysREF,
+      [key]: roundTwoDecimal((keysREF[key] || 0) + value),
+    }
+  }
+
+  for (const itemMO of keysMO) {
+    const totalCost = roundTwoDecimal((itemMO.precioMO || 0) + keysREF[itemMO.paquete])
+    const totalWithTax = roundTwoDecimal(totalCost * 1.16)
+    const diff = roundTwoDecimal(itemMO.precioPaquete - totalWithTax)
+    if (diff !== 0) {
+      errors.push(
+        `${itemMO.paquete.split("|")[2]} -> MO: ${itemMO.precioMO}, REF: ${
+          keysREF[itemMO.paquete]
+        }, TOT: ${totalCost}, ESPERADO: ${
+          itemMO.precioPaquete
+        }, CALCULADO: ${totalWithTax}, DIF: ${diff}`
+      )
+    }
+  }
+
+  return errors
+}
+
+export function roundTwoDecimal(num) {
+  return Math.trunc(num * 100) / 100
+}

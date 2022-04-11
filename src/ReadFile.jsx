@@ -1,5 +1,6 @@
 import { useState } from "react"
 import readXlsxFile, { readSheetNames } from "read-excel-file"
+import ItemError from "./ItemError"
 // import * as yup from "yup"
 import ItemMO from "./ItemMO"
 import {
@@ -10,7 +11,7 @@ import {
   refSchema,
   mapREF,
 } from "./utils/validationObjects"
-import { validateMOvsVA, validateMOvsREF } from "./utils/validations"
+import { validateMOvsVA, validateMOvsREF, validatePackagePrice } from "./utils/validations"
 
 const ReadFile = () => {
   const [data, setData] = useState([])
@@ -22,6 +23,7 @@ const ReadFile = () => {
   const [globalError, setGlobalError] = useState(null)
   const [errorsMOvsVA, setErrorsMOvsVA] = useState([])
   const [errorsMOvsREF, setErrorsMOvsREF] = useState([])
+  const [errorsPrice, setErrorsPrice] = useState([])
 
   const handleUpload = async e => {
     e.preventDefault()
@@ -106,6 +108,7 @@ const ReadFile = () => {
 
     setErrorsMOvsVA(validateMOvsVA(validationPackage, validationVA))
     setErrorsMOvsREF(validateMOvsREF(validationPackage, validationREF))
+    setErrorsPrice(validatePackagePrice(validationPackage, validationREF))
   }
 
   // const clearFile = () => {
@@ -148,7 +151,8 @@ const ReadFile = () => {
               dataVA.filter(row => row.errors).length +
               dataREF.filter(row => row.errors).length +
               errorsMOvsVA.length +
-              errorsMOvsREF.length}
+              errorsMOvsREF.length +
+              errorsPrice.length}
           </h3>
           <button onClick={handleOnlyErrors}>
             {onlyErrors ? "Mostrar todo" : "Mostrar solo errores"}
@@ -174,13 +178,19 @@ const ReadFile = () => {
           <section>
             <h3>Resumen de -- MO vs VA --</h3>
             {errorsMOvsVA.map((item, index) => (
-              <p key={index}>{item}</p>
+              <ItemError key={index} message={item} />
             ))}
           </section>
           <section>
             <h3>Resumen de -- MO vs REF --</h3>
             {errorsMOvsREF.map((item, index) => (
-              <p key={index}>{item}</p>
+              <ItemError key={index} message={item} />
+            ))}
+          </section>
+          <section>
+            <h3>Resumen de -- PRECIO PAQUETE --</h3>
+            {errorsPrice.map((item, index) => (
+              <ItemError key={index} message={item} />
             ))}
           </section>
         </div>
