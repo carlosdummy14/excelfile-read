@@ -1,6 +1,6 @@
 # Package Validator
 
-This app read a ".xlsx" file and validate structure and consistency around tree sheets./
+This app read a ".xlsx" file and validate structure and consistency around tree sheets.  
 I know that is something specific for me, but is good for learn.
 
 ### Task List
