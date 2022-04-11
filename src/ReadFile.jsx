@@ -1,6 +1,6 @@
 import { useState } from "react"
 import readXlsxFile, { readSheetNames } from "read-excel-file"
-import * as yup from "yup"
+// import * as yup from "yup"
 import ItemMO from "./ItemMO"
 import {
   packageSchema,
@@ -10,16 +10,18 @@ import {
   refSchema,
   mapREF,
 } from "./utils/validationObjects"
-import { validateMOvsVA } from "./utils/validations"
+import { validateMOvsVA, validateMOvsREF } from "./utils/validations"
 
 const ReadFile = () => {
   const [data, setData] = useState([])
   const [dataVA, setDataVA] = useState([])
   const [dataREF, setDataREF] = useState([])
+  const [sheetsOnFile, setSheetsOnFile] = useState([])
   const [onlyErrors, setOnlyErrors] = useState(false)
   const [fileName, setFileName] = useState("Selecciona un archivo...")
   const [globalError, setGlobalError] = useState(null)
-  const [errorsMOvsVA, setErrorsMOvsVA] = useState(null)
+  const [errorsMOvsVA, setErrorsMOvsVA] = useState([])
+  const [errorsMOvsREF, setErrorsMOvsREF] = useState([])
 
   const handleUpload = async e => {
     e.preventDefault()
@@ -30,7 +32,7 @@ const ReadFile = () => {
 
     try {
       setGlobalError(null)
-      const sheetsName = await readSheetNames(input.files[0])
+      setSheetsOnFile(await readSheetNames(input.files[0]))
       const fileReaded = await readXlsxFile(input.files[0], {
         sheet: "DMS-MO 14",
         map: mapMO,
@@ -103,28 +105,34 @@ const ReadFile = () => {
     setFileName(input.files[0].name)
 
     setErrorsMOvsVA(validateMOvsVA(validationPackage, validationVA))
+    setErrorsMOvsREF(validateMOvsREF(validationPackage, validationREF))
   }
 
-  const clearFile = () => {
-    setData("")
-  }
+  // const clearFile = () => {
+  //   setData("")
+  // }
 
   const handleOnlyErrors = () => {
     setOnlyErrors(prevStatus => !prevStatus)
   }
 
   // console.log(data)
-  console.log(errorsMOvsVA)
+  // console.log(errorsMOvsVA)
 
   return (
-    <div>
-      <h3>Read File</h3>
-      <form onSubmit={handleUpload}>
-        <input type="file" id="input" />
+    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      <form
+        onSubmit={handleUpload}
+        style={{ marginTop: "1rem", display: "flex", justifyContent: "center" }}
+      >
+        <input type="file" id="input" />
         <br />
         <button>Check File</button>
       </form>
       <h3>Archivo: {fileName}</h3>
+      <p>
+        <small>{sheetsOnFile.map(sheet => `${sheet} `)}</small>
+      </p>
       {globalError ? (
         <p>
           {globalError.msg}
@@ -132,20 +140,19 @@ const ReadFile = () => {
           {globalError.error}
         </p>
       ) : (
-        <>
+        <div style={{ padding: "2rem 0" }}>
           <h3>
             Total de paquetes: {data.length} Correctos: {data.filter(row => row.value).length}{" "}
-            Errores: {data.filter(row => row.errors).length}
+            Errores:{" "}
+            {data.filter(row => row.errors).length +
+              dataVA.filter(row => row.errors).length +
+              dataREF.filter(row => row.errors).length +
+              errorsMOvsVA.length +
+              errorsMOvsREF.length}
           </h3>
           <button onClick={handleOnlyErrors}>
             {onlyErrors ? "Mostrar todo" : "Mostrar solo errores"}
           </button>
-          <section>
-            <h3>Resumen de -- MO vs VA --</h3>
-            {errorsMOvsVA?.map(item => (
-              <p>{item}</p>
-            ))}
-          </section>
           <section>
             <h3>Resumen de -- DMS-MO 14 --</h3>
             {data.map(itemMO => (
@@ -164,7 +171,19 @@ const ReadFile = () => {
               <ItemMO key={itemREF.row} data={itemREF} onlyErrors={onlyErrors} />
             ))}
           </section>
-        </>
+          <section>
+            <h3>Resumen de -- MO vs VA --</h3>
+            {errorsMOvsVA.map((item, index) => (
+              <p key={index}>{item}</p>
+            ))}
+          </section>
+          <section>
+            <h3>Resumen de -- MO vs REF --</h3>
+            {errorsMOvsREF.map((item, index) => (
+              <p key={index}>{item}</p>
+            ))}
+          </section>
+        </div>
       )}
     </div>
   )
