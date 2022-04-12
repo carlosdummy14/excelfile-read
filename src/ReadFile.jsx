@@ -55,7 +55,6 @@ const ReadFile = () => {
       setGlobalError({ msg: "Archivo invalido!!!", error: error.message })
     }
 
-    // console.log(rows)
 
     // -- validation of sheet MO
     const validationPackage = await Promise.all(
@@ -64,7 +63,6 @@ const ReadFile = () => {
         try {
           value = await packageSchema.validate(row, { abortEarly: false })
         } catch (error) {
-          // console.log(error)
           // return error
           errAcum = error.errors
         }
@@ -78,7 +76,6 @@ const ReadFile = () => {
         try {
           value = await varSchema.validate(row, { abortEarly: false })
         } catch (error) {
-          // console.log(error)
           // return error
           errAcum = error.errors
         }
@@ -92,7 +89,6 @@ const ReadFile = () => {
         try {
           value = await refSchema.validate(row, { abortEarly: false })
         } catch (error) {
-          // console.log(error)
           // return error
           errAcum = error.errors
         }
@@ -100,7 +96,6 @@ const ReadFile = () => {
       })
     )
 
-    // console.log(validationPackage)
     setData(validationPackage)
     setDataVA(validationVA)
     setDataREF(validationREF)
@@ -118,9 +113,6 @@ const ReadFile = () => {
   const handleOnlyErrors = () => {
     setOnlyErrors(prevStatus => !prevStatus)
   }
-
-  // console.log(data)
-  // console.log(errorsMOvsVA)
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
